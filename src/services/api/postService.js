@@ -10,7 +10,14 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 export const postService = {
   async getAll() {
     await delay(250);
-    return [...posts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+return [...posts].sort((a, b) => {
+      // Sort by vote count first (highest first)
+      if (b.voteCount !== a.voteCount) {
+        return b.voteCount - a.voteCount;
+      }
+      // If vote counts are equal, sort by creation date (newest first)
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
   },
 
   async getById(id) {
@@ -24,9 +31,16 @@ export const postService = {
 
   async getByCommunityId(communityId) {
     await delay(300);
-    return [...posts]
+return [...posts]
       .filter(p => p.communityId === communityId.toString())
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      .sort((a, b) => {
+        // Sort by vote count first (highest first)
+        if (b.voteCount !== a.voteCount) {
+          return b.voteCount - a.voteCount;
+        }
+        // If vote counts are equal, sort by creation date (newest first)
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
   },
 
   async create(postData) {
