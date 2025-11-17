@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { postService } from "@/services/api/postService";
 import CommunityBadge from "@/components/molecules/CommunityBadge";
@@ -35,16 +36,19 @@ const PostDetailPage = () => {
     }
   };
 
-  const handleVote = async (voteType) => {
+const handleVote = async (voteType) => {
     try {
+      // Optimistic update
+      const increment = voteType === "up" ? 1 : -1;
+      setVoteCount(prev => prev + increment);
+      
       await postService.vote(id, voteType);
-      if (voteType === "up") {
-        setVoteCount(prev => prev + 1);
-      } else if (voteType === "down") {
-        setVoteCount(prev => prev - 1);
-      }
+      toast.success(`Post ${voteType === "up" ? "upvoted" : "downvoted"}!`);
     } catch (error) {
-      console.error("Failed to vote:", error);
+      // Rollback on error
+      const rollback = voteType === "up" ? -1 : 1;
+      setVoteCount(prev => prev + rollback);
+      toast.error("Failed to vote. Please try again.");
     }
   };
 
@@ -128,28 +132,31 @@ const PostDetailPage = () => {
           {/* Post Actions */}
           <div className="flex items-center justify-between pt-6 border-t border-gray-100">
             <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
+<div className="flex items-center space-x-3">
                 <motion.button
-                  className="flex items-center space-x-1 text-gray-500 hover:text-green-600 transition-colors p-2 rounded-lg hover:bg-green-50"
+                  className="flex items-center justify-center w-12 h-12 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-all duration-200 border border-gray-200 hover:border-green-200"
                   onClick={() => handleVote("up")}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <ApperIcon name="ArrowUp" className="w-5 h-5" />
+                  <ApperIcon name="ArrowUp" className="w-6 h-6" />
                 </motion.button>
-                <span className="text-lg font-semibold text-gray-700 min-w-[40px] text-center">
-                  {voteCount}
-                </span>
-                <motion.button
-                  className="flex items-center space-x-1 text-gray-500 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
+                
+                <div className="flex flex-col items-center">
+                  <span className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Score</span>
+                  <span className="text-2xl font-bold text-gray-800 min-w-[60px] text-center">
+                    {voteCount}
+                  </span>
+                </div>
+<motion.button
+                  className="flex items-center justify-center w-12 h-12 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 border border-gray-200 hover:border-red-200"
                   onClick={() => handleVote("down")}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <ApperIcon name="ArrowDown" className="w-5 h-5" />
+                  <ApperIcon name="ArrowDown" className="w-6 h-6" />
                 </motion.button>
               </div>
-
               <motion.button
                 className="flex items-center space-x-2 text-gray-500 hover:text-secondary-600 transition-colors p-2 rounded-lg hover:bg-secondary-50"
                 whileHover={{ scale: 1.05 }}

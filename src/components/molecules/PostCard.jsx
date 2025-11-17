@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import CommunityBadge from "@/components/molecules/CommunityBadge";
-import ApperIcon from "@/components/ApperIcon";
+import { postService } from "@/services/api/postService";
+import { toast } from "react-toastify";
+import React, { useState } from "react";
 import { cn } from "@/utils/cn";
+import ApperIcon from "@/components/ApperIcon";
+import CommunityBadge from "@/components/molecules/CommunityBadge";
 
 const PostCard = ({ post, className, ...props }) => {
   const navigate = useNavigate();
@@ -23,24 +26,69 @@ const PostCard = ({ post, className, ...props }) => {
   };
 
   const timeAgo = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true });
+const [currentVoteCount, setCurrentVoteCount] = useState(post.voteCount || 0);
 
+  const handleVote = async (e, voteType) => {
+    e.stopPropagation();
+    try {
+      // Optimistic update
+      const increment = voteType === "up" ? 1 : -1;
+      setCurrentVoteCount(prev => prev + increment);
+      
+      await postService.vote(post.Id, voteType);
+      toast.success(`Post ${voteType === "up" ? "upvoted" : "downvoted"}!`);
+    } catch (error) {
+      // Rollback on error
+      const rollback = voteType === "up" ? -1 : 1;
+      setCurrentVoteCount(prev => prev + rollback);
+      toast.error("Failed to vote. Please try again.");
+    }
+  };
   return (
-    <motion.article
+<motion.article
       className={cn(
-        "bg-white rounded-lg border border-gray-200 p-6 shadow-sm cursor-pointer",
+        "bg-white rounded-lg border border-gray-200 shadow-sm cursor-pointer",
         "hover:shadow-md hover:-translate-y-0.5 transition-all duration-200",
-        className
+className
       )}
       onClick={handleClick}
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
       {...props}
     >
-      <div className="flex items-center justify-between mb-3">
-        <motion.div
-          onClick={handleCommunityClick}
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.2 }}
+      <div className="flex">
+        {/* Voting Section */}
+        <div className="flex flex-col items-center space-y-1 mr-4 py-2">
+          <motion.button
+            className="flex items-center justify-center w-8 h-8 rounded text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors"
+            onClick={(e) => handleVote(e, "up")}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <ApperIcon name="ArrowUp" className="w-5 h-5" />
+          </motion.button>
+          
+          <span className="text-sm font-bold text-gray-700 min-w-[24px] text-center">
+            {currentVoteCount}
+          </span>
+          
+          <motion.button
+            className="flex items-center justify-center w-8 h-8 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            onClick={(e) => handleVote(e, "down")}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <ApperIcon name="ArrowDown" className="w-5 h-5" />
+          </motion.button>
+        </div>
+
+        {/* Content Section */}
+        <div className="flex-1 p-6">
+          <div className="flex items-center justify-between mb-3">
+            <motion.div
+              onClick={handleCommunityClick}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
         >
           <CommunityBadge 
             name={post.communityName} 
@@ -62,40 +110,32 @@ const PostCard = ({ post, className, ...props }) => {
         {truncateContent(post.content)}
       </p>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+<div className="flex items-center justify-between pt-4 border-t border-gray-100">
         <div className="flex items-center space-x-4">
           <motion.button
-            className="flex items-center space-x-1 text-gray-500 hover:text-primary-600 transition-colors"
+            className="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <ApperIcon name="ArrowUp" className="w-4 h-4" />
-            <span className="text-sm font-medium">{post.voteCount}</span>
+            <ApperIcon name="MessageSquare" className="w-4 h-4" />
+            <span className="text-sm font-medium">Comments</span>
           </motion.button>
+          
           <motion.button
-            className="flex items-center space-x-1 text-gray-500 hover:text-secondary-600 transition-colors"
+            className="flex items-center space-x-1 text-gray-500 hover:text-green-600 transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <ApperIcon name="MessageCircle" className="w-4 h-4" />
-            <span className="text-sm">Discussion</span>
+            <ApperIcon name="Share" className="w-4 h-4" />
+            <span className="text-sm font-medium">Share</span>
           </motion.button>
         </div>
-        
-        <motion.button
-          className="flex items-center space-x-1 text-gray-500 hover:text-accent-600 transition-colors"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ApperIcon name="Share2" className="w-4 h-4" />
-          <span className="text-sm">Share</span>
-        </motion.button>
       </div>
-    </motion.article>
-  );
+    </div>
+  </motion.article>
+);
 };
 
 export default PostCard;
