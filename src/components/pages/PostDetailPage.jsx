@@ -12,16 +12,20 @@ import ErrorView from "@/components/ui/ErrorView";
 const PostDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [post, setPost] = useState(null);
+const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [voteCount, setVoteCount] = useState(0);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {
     loadPost();
+    loadComments();
   }, [id]);
 
-  const loadPost = async () => {
+const loadPost = async () => {
     try {
       setLoading(true);
       setError("");
@@ -32,6 +36,15 @@ const PostDetailPage = () => {
       setError(err.message || "Post not found");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadComments = async () => {
+    try {
+      const data = await postService.getCommentsByPostId(id);
+      setComments(data);
+    } catch (err) {
+      console.error("Failed to load comments:", err);
     }
   };
 
@@ -51,8 +64,25 @@ const handleVote = async (voteType) => {
     }
   };
 
-  const handleCommunityClick = () => {
+const handleCommunityClick = () => {
     navigate(`/community/${post.communityId}`);
+  };
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    try {
+      setSubmitting(true);
+      const comment = await postService.createComment(id, newComment.trim());
+      setComments(prev => [...prev, comment]);
+      setNewComment("");
+      toast.success("Comment added successfully!");
+    } catch (err) {
+      toast.error("Failed to add comment. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
 if (loading) {
@@ -184,20 +214,65 @@ if (loading) {
       </motion.article>
 
       {/* Comments Section Placeholder */}
-      <motion.div 
+<motion.div 
         className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.3 }}
       >
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Comments</h2>
-        <div className="text-center py-8">
-          <ApperIcon name="MessageCircle" className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600">Comments feature coming soon!</p>
-          <p className="text-sm text-gray-500 mt-1">
-            Users will be able to discuss and reply to this post here.
-          </p>
-        </div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Comments ({comments.length})</h2>
+        
+        {/* Comment Form */}
+        <form onSubmit={handleCommentSubmit} className="mb-6">
+          <div className="flex flex-col space-y-3">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Write a comment..."
+              className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-colors"
+              rows="3"
+              disabled={submitting}
+            />
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={!newComment.trim() || submitting}
+                className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                {submitting ? "Posting..." : "Post Comment"}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {/* Comments List */}
+        {comments.length > 0 ? (
+          <div className="space-y-4">
+            {comments.map((comment) => (
+              <motion.div
+                key={comment.Id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="border-l-2 border-gray-200 pl-4 py-3"
+              >
+                <p className="text-gray-800 mb-2">{comment.content}</p>
+                <div className="flex items-center text-sm text-gray-500">
+                  <ApperIcon name="Clock" size={14} className="mr-1" />
+                  {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <ApperIcon name="MessageCircle" className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-600">No comments yet</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Be the first to share your thoughts!
+            </p>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
