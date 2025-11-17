@@ -1,0 +1,75 @@
+@import 'react-toastify/dist/ReactToastify.css';
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Toast Notification Overrides */
+.Toastify__toast {
+  @apply rounded-lg shadow-lg;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.Toastify__toast--success {
+  @apply bg-green-50 border-l-4 border-l-green-500;
+}
+
+.Toastify__toast--error {
+  @apply bg-red-50 border-l-4 border-l-red-500;
+}
+
+.Toastify__toast--info {
+  @apply bg-blue-50 border-l-4 border-l-blue-500;
+}
+
+.Toastify__toast-body {
+  @apply text-gray-800;
+}
+
+.Toastify__progress-bar--success {
+  @apply bg-green-500;
+}
+
+.Toastify__progress-bar--error {
+  @apply bg-red-500;
+}
+
+.Toastify__progress-bar--info {
+  @apply bg-blue-500;
+}
+
+/* Custom scrollbar for sidebar and content areas */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "Id": 1,
+    "name": "Technology",
+    "description": "Latest news, discussions, and insights about technology, programming, and innovation.",
+    "color": "#0079D3",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "postCount": 12
+  },
+  {
+    "Id": 2,
+    "name": "Gaming",
+    "description": "Everything about video games, from reviews and tips to news and community discussions.",
+    "color": "#8B5CF6",
+    "createdAt": "2024-01-16T14:20:00Z",
+    "postCount": 8
+  },
+  {
+    "Id": 3,
+    "name": "Science",
+    "description": "Fascinating discoveries, research breakthroughs, and scientific discussions for curious minds.",
+    "color": "#10B981",
+    "createdAt": "2024-01-17T09:15:00Z",
+    "postCount": 15
+  },
+  {
+    "Id": 4,
+    "name": "Movies",
+    "description": "Reviews, discussions, and recommendations about the latest movies and classic films.",
+    "color": "#F59E0B",
+    "createdAt": "2024-01-18T16:45:00Z",
+    "postCount": 6
+  },
+  {
+    "Id": 5,
+    "name": "Photography",
+    "description": "Share your photos, get feedback, and discuss photography techniques with fellow enthusiasts.",
+    "color": "#EF4444",
+    "createdAt": "2024-01-19T11:30:00Z",
+    "postCount": 9
+  }
+]
