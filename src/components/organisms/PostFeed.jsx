@@ -7,7 +7,7 @@ import Loading from "@/components/ui/Loading";
 import Empty from "@/components/ui/Empty";
 import ErrorView from "@/components/ui/ErrorView";
 
-const PostFeed = ({ communityId = null, sortBy = 'hot', onCreatePost }) => {
+const PostFeed = ({ communityId = null, sortBy = 'hot', onCreatePost, searchQuery = null, searchResults = null, loading: externalLoading = false }) => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +56,36 @@ if (communityId) {
         onAction={onCreatePost}
         icon="MessageCircle"
       />
+    );
+  }
+
+// Handle search results display
+  if (searchQuery !== null) {
+    return (
+      <div className="space-y-4">
+        {externalLoading ? (
+          <Loading />
+        ) : searchResults && searchResults.length === 0 ? (
+          <Empty 
+            icon="Search"
+            title="No posts found"
+            description={`No posts match your search for "${searchQuery}". Try different keywords or check your spelling.`}
+          />
+        ) : (
+          <div className="space-y-4">
+            {searchResults && searchResults.map((post, index) => (
+              <motion.div
+                key={post.Id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <PostCard post={post} />
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
     );
   }
 

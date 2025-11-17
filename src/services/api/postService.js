@@ -239,6 +239,34 @@ async createComment(postId, content) {
     const increment = voteType === "up" ? 1 : -1;
     comment.voteCount = (comment.voteCount || 0) + increment;
     
-    return { ...comment };
+return { ...comment };
+  },
+
+  // Search functionality
+  async searchPosts(query) {
+    await delay(300);
+    
+    if (!query || query.trim() === '') {
+      return [];
+    }
+    
+    const searchTerm = query.toLowerCase().trim();
+    const filteredPosts = posts.filter(post => {
+      const titleMatch = post.title.toLowerCase().includes(searchTerm);
+      const contentMatch = post.content.toLowerCase().includes(searchTerm);
+      return titleMatch || contentMatch;
+    });
+    
+    // Sort search results by relevance (title matches first, then by vote count)
+    return filteredPosts.sort((a, b) => {
+      const aTitleMatch = a.title.toLowerCase().includes(searchTerm);
+      const bTitleMatch = b.title.toLowerCase().includes(searchTerm);
+      
+      if (aTitleMatch && !bTitleMatch) return -1;
+      if (!aTitleMatch && bTitleMatch) return 1;
+      
+      // If both or neither have title matches, sort by vote count
+      return b.voteCount - a.voteCount;
+    });
   }
 };

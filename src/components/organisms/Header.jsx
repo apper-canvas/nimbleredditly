@@ -28,7 +28,7 @@ const Header = ({ onCreateCommunity, onSearch }) => {
         </div>
 
         <div className="flex-1 max-w-md mx-8">
-          <SearchBar 
+<SearchBar 
             placeholder="Search communities and posts..."
             onSearch={onSearch}
           />
