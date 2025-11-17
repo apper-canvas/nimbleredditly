@@ -78,9 +78,11 @@ export const postService = {
     return true;
   },
 
-  async vote(id, voteType) {
+async vote(id, voteType) {
     await delay(200);
-    const index = posts.findIndex(p => p.Id === parseInt(id));
+    const postId = parseInt(id);
+    const index = posts.findIndex(p => p.Id === postId);
+    
     if (index === -1) {
       throw new Error("Post not found");
     }
@@ -89,6 +91,8 @@ export const postService = {
       posts[index].voteCount += 1;
     } else if (voteType === "down") {
       posts[index].voteCount -= 1;
+    } else {
+      throw new Error("Invalid vote type");
     }
     
     return { ...posts[index] };

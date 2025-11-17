@@ -13,7 +13,7 @@ const PostCard = ({ post, className, ...props }) => {
   const navigate = useNavigate();
   const [currentVoteCount, setCurrentVoteCount] = useState(post.voteCount || 0);
 
-  const handleClick = () => {
+const handleClick = () => {
     navigate(`/post/${post.Id}`);
   };
 

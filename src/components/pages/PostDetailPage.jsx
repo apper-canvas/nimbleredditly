@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "react-toastify";
 import { postService } from "@/services/api/postService";
+import ApperIcon from "@/components/ApperIcon";
+import Button from "@/components/atoms/Button";
 import CommunityBadge from "@/components/molecules/CommunityBadge";
 import Loading from "@/components/ui/Loading";
 import ErrorView from "@/components/ui/ErrorView";
-import ApperIcon from "@/components/ApperIcon";
-import Button from "@/components/atoms/Button";
-import { formatDistanceToNow } from "date-fns";
-
 const PostDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -42,7 +41,7 @@ const handleVote = async (voteType) => {
       const increment = voteType === "up" ? 1 : -1;
       setVoteCount(prev => prev + increment);
       
-      await postService.vote(id, voteType);
+      await postService.vote(parseInt(id), voteType);
       toast.success(`Post ${voteType === "up" ? "upvoted" : "downvoted"}!`);
     } catch (error) {
       // Rollback on error
@@ -56,8 +55,8 @@ const handleVote = async (voteType) => {
     navigate(`/community/${post.communityId}`);
   };
 
-  if (loading) {
-    return <Loading type="default" />;
+if (loading) {
+    return <Loading />;
   }
 
   if (error) {
@@ -69,7 +68,6 @@ const handleVote = async (voteType) => {
   }
 
   const timeAgo = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true });
-
   return (
     <motion.div
       className="space-y-6"
@@ -148,7 +146,8 @@ const handleVote = async (voteType) => {
                     {voteCount}
                   </span>
                 </div>
-<motion.button
+                
+                <motion.button
                   className="flex items-center justify-center w-12 h-12 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 border border-gray-200 hover:border-red-200"
                   onClick={() => handleVote("down")}
                   whileHover={{ scale: 1.05 }}
