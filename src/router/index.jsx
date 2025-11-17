@@ -31,7 +31,7 @@ const mainRoutes = [
     element: <Suspense fallback={<LoadingFallback />}><CommunitiesPage /></Suspense>
   },
   {
-    path: "community/:id",
+path: "communities/:id",
     element: <Suspense fallback={<LoadingFallback />}><CommunityDetailPage /></Suspense>
   },
   {
