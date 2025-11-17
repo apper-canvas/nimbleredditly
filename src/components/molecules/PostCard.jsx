@@ -110,9 +110,23 @@ const handleClick = () => {
                 className="text-xl font-bold text-gray-900 mb-3 hover:text-primary-600 transition-colors">
                 {post.title}
             </h2>
-            <p className="text-gray-600 leading-relaxed mb-4">
-                {truncateContent(post.content)}
-            </p>
+{post.type === "link" ? (
+                <div className="mb-4">
+                    <a
+                        href={post.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-3 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-700 hover:text-blue-800 transition-colors text-sm font-medium"
+                    >
+                        <ApperIcon name="ExternalLink" size={16} className="mr-2" />
+                        {post.url}
+                    </a>
+                </div>
+            ) : (
+                <p className="text-gray-600 leading-relaxed mb-4">
+                    {truncateContent(post.content)}
+                </p>
+            )}
             <div
                 className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <div className="flex items-center space-x-4">

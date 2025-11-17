@@ -1,26 +1,30 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { postService } from "@/services/api/postService";
 import { communityService } from "@/services/api/communityService";
+import { toast } from "react-toastify";
+import { cn } from "@/utils/cn";
 import ApperIcon from "@/components/ApperIcon";
+import FormField from "@/components/molecules/FormField";
+import Loading from "@/components/ui/Loading";
+import Select from "@/components/atoms/Select";
+import Label from "@/components/atoms/Label";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
 import Textarea from "@/components/atoms/Textarea";
-import Select from "@/components/atoms/Select";
-import FormField from "@/components/molecules/FormField";
-import Loading from "@/components/ui/Loading";
-import { toast } from "react-toastify";
 
 const CreatePostModal = ({ isOpen, onClose }) => {
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     title: "",
     content: "",
+    url: "",
     communityId: ""
   });
+  const [postType, setPostType] = useState("text"); // "text" or "link"
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingCommunities, setLoadingCommunities] = useState(true);
-  const [errors, setErrors] = useState({});
+const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (isOpen) {
@@ -40,7 +44,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const validateForm = () => {
+const validateForm = () => {
     const newErrors = {};
     
     if (!formData.title.trim()) {
@@ -49,8 +53,20 @@ const CreatePostModal = ({ isOpen, onClose }) => {
       newErrors.title = "Title must be 300 characters or less";
     }
     
-    if (!formData.content.trim()) {
-      newErrors.content = "Content is required";
+    if (postType === "text") {
+      if (!formData.content.trim()) {
+        newErrors.content = "Content is required";
+      }
+    } else if (postType === "link") {
+      if (!formData.url.trim()) {
+        newErrors.url = "URL is required";
+      } else {
+        try {
+          new URL(formData.url);
+        } catch {
+          newErrors.url = "Please enter a valid URL";
+        }
+      }
     }
     
     if (!formData.communityId) {
@@ -70,13 +86,22 @@ const CreatePostModal = ({ isOpen, onClose }) => {
 
     try {
       setLoading(true);
-      await postService.create({
+const postData = {
         title: formData.title.trim(),
-        content: formData.content.trim(),
-        communityId: formData.communityId
-      });
+        communityId: formData.communityId,
+        type: postType
+      };
       
-      setFormData({ title: "", content: "", communityId: "" });
+      if (postType === "text") {
+        postData.content = formData.content.trim();
+      } else {
+        postData.url = formData.url.trim();
+      }
+      
+      await postService.create(postData);
+      
+setFormData({ title: "", content: "", url: "", communityId: "" });
+      setPostType("text");
       setErrors({});
       onClose();
       
@@ -89,7 +114,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleChange = (field) => (e) => {
+const handleChange = (field) => (e) => {
     setFormData(prev => ({
       ...prev,
       [field]: e.target.value
@@ -103,10 +128,22 @@ const CreatePostModal = ({ isOpen, onClose }) => {
       }));
     }
   };
+  
+  const handlePostTypeChange = (type) => {
+    setPostType(type);
+    // Clear errors when switching types
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors.content;
+      delete newErrors.url;
+      return newErrors;
+    });
+  };
 
   const handleClose = () => {
     if (!loading) {
-      setFormData({ title: "", content: "", communityId: "" });
+setFormData({ title: "", content: "", url: "", communityId: "" });
+      setPostType("text");
       setErrors({});
       onClose();
     }
@@ -145,7 +182,41 @@ const CreatePostModal = ({ isOpen, onClose }) => {
               {loadingCommunities ? (
                 <Loading type="default" />
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
+<form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Post Type Toggle */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Post Type
+                    </Label>
+                    <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => handlePostTypeChange("text")}
+                        className={cn(
+                          "flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all",
+                          postType === "text"
+                            ? "bg-white text-gray-900 shadow-sm"
+                            : "text-gray-500 hover:text-gray-700"
+                        )}
+                      >
+                        <ApperIcon name="FileText" size={16} className="inline mr-2" />
+                        Text Post
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handlePostTypeChange("link")}
+                        className={cn(
+                          "flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all",
+                          postType === "link"
+                            ? "bg-white text-gray-900 shadow-sm"
+                            : "text-gray-500 hover:text-gray-700"
+                        )}
+                      >
+                        <ApperIcon name="Link" size={16} className="inline mr-2" />
+                        Link Post
+                      </button>
+                    </div>
+                  </div>
                   <FormField
                     label="Community"
                     error={errors.communityId}
@@ -179,19 +250,35 @@ const CreatePostModal = ({ isOpen, onClose }) => {
                     />
                   </FormField>
 
-                  <FormField
-                    label="Content"
-                    error={errors.content}
-                    required
-                  >
-                    <Textarea
-                      value={formData.content}
-                      onChange={handleChange("content")}
-                      placeholder="Tell us more..."
-                      error={!!errors.content}
-                      rows={8}
-                    />
-                  </FormField>
+{postType === "text" ? (
+                    <FormField
+                      label="Content"
+                      error={errors.content}
+                      required
+                    >
+                      <Textarea
+                        value={formData.content}
+                        onChange={handleChange("content")}
+                        placeholder="Tell us more..."
+                        error={!!errors.content}
+                        rows={8}
+                      />
+                    </FormField>
+                  ) : (
+                    <FormField
+                      label="URL"
+                      error={errors.url}
+                      required
+                    >
+                      <Input
+                        type="url"
+                        value={formData.url}
+                        onChange={handleChange("url")}
+                        placeholder="https://example.com"
+                        error={!!errors.url}
+                      />
+                    </FormField>
+                  )}
 
                   <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
                     <Button
