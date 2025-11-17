@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import CommunityGrid from "@/components/organisms/CommunityGrid";
 import CreateCommunityModal from "@/components/organisms/CreateCommunityModal";
@@ -7,15 +8,17 @@ import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
 
 const CommunitiesPage = () => {
-  const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
+const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleCreateCommunity = () => {
     setIsCreateCommunityOpen(true);
   };
 
   const handleSearch = (searchTerm) => {
-    // TODO: Implement search functionality
-    console.log("Search communities:", searchTerm);
+if (searchTerm.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    }
   };
 
   return (

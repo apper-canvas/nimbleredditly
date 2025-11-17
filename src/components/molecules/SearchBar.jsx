@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/utils/cn";
 import ApperIcon from "@/components/ApperIcon";
 import Input from "@/components/atoms/Input";
@@ -10,6 +11,7 @@ const SearchBar = ({
   ...props 
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -18,11 +20,23 @@ const SearchBar = ({
     }
   };
 
-  const handleChange = (e) => {
+const handleChange = (e) => {
     const value = e.target.value;
-setSearchTerm(value);
+    setSearchTerm(value);
     if (onSearch) {
       onSearch(value);
+    }
+  };
+
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
