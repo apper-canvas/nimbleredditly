@@ -106,10 +106,34 @@ const handleClick = () => {
                     {timeAgo}
                 </span>
             </div>
-            <h2
-                className="text-xl font-bold text-gray-900 mb-3 hover:text-primary-600 transition-colors">
-                {post.title}
-            </h2>
+<div className="flex items-start justify-between mb-3">
+                <h2 className="text-xl font-bold text-gray-900 hover:text-primary-600 transition-colors flex-1 mr-3">
+                    {post.title}
+                </h2>
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/posts/${post.Id}`);
+                    }}
+                    className="flex items-center space-x-1 text-gray-500 hover:text-primary-600 transition-colors flex-shrink-0"
+                >
+                    <ApperIcon name="MessageCircle" className="w-4 h-4" />
+                    <span className="text-sm font-medium">
+                        {post.comments ? post.comments.reduce((total, comment) => {
+                            const countReplies = (comment) => {
+                                let count = 1;
+                                if (comment.replies && comment.replies.length > 0) {
+                                    comment.replies.forEach(reply => {
+                                        count += countReplies(reply);
+                                    });
+                                }
+                                return count;
+                            };
+                            return total + countReplies(comment);
+                        }, 0) : 0}
+                    </span>
+                </button>
+            </div>
 {post.type === "link" ? (
                 <div className="mb-4">
                     <a
@@ -144,8 +168,21 @@ className="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transit
                                 onCommentClick(post.Id);
                             }
                         }}>
-                        <ApperIcon name="MessageSquare" className="w-4 h-4" />
-                        <span className="text-sm font-medium">Comments</span>
+<ApperIcon name="MessageSquare" className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                            {post.comments ? post.comments.reduce((total, comment) => {
+                                const countReplies = (comment) => {
+                                    let count = 1;
+                                    if (comment.replies && comment.replies.length > 0) {
+                                        comment.replies.forEach(reply => {
+                                            count += countReplies(reply);
+                                        });
+                                    }
+                                    return count;
+                                };
+                                return total + countReplies(comment);
+                            }, 0) : 0} Comments
+                        </span>
                     </motion.button>
                     <motion.button
                         className="flex items-center space-x-1 text-gray-500 hover:text-green-600 transition-colors"
