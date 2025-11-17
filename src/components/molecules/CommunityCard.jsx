@@ -44,10 +44,12 @@ const CommunityCard = ({ community, className, ...props }) => {
       </p>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <div className="flex items-center space-x-4">
+<div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1 text-gray-500">
             <ApperIcon name="Users" className="w-4 h-4" />
-            <span className="text-sm">1.2k members</span>
+            <span className="text-sm">
+              {community.memberCount?.toLocaleString() || '0'} members
+            </span>
           </div>
           <div className="flex items-center space-x-1 text-gray-500">
             <ApperIcon name="MessageSquare" className="w-4 h-4" />

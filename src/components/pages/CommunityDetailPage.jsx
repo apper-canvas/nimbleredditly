@@ -26,6 +26,15 @@ loadCommunity();
     checkMembership();
   }, [id]);
 
+  const refreshCommunityData = async () => {
+    try {
+      const updatedCommunity = await communityService.getById(id);
+      setCommunity(updatedCommunity);
+    } catch (err) {
+      console.error("Error refreshing community data:", err);
+    }
+  };
+
 const loadCommunity = async () => {
     try {
       setLoading(true);
@@ -48,7 +57,7 @@ const loadCommunity = async () => {
     }
   };
 
-  const handleJoinLeave = async () => {
+const handleJoinLeave = async () => {
     try {
       setMembershipLoading(true);
       if (isMember) {
@@ -58,6 +67,8 @@ const loadCommunity = async () => {
         await communityService.joinCommunity(id);
         setIsMember(true);
       }
+      // Refresh community data to get updated member count
+      await refreshCommunityData();
     } catch (err) {
       console.error("Error updating membership:", err);
     } finally {
@@ -121,7 +132,7 @@ const handleCreatePost = () => {
                 </span>
 <span className="flex items-center">
                   <ApperIcon name="Users" className="w-4 h-4 mr-1" />
-                  {community.memberCount || '1.2k'} members
+                  {community.memberCount?.toLocaleString() || '0'} members
                 </span>
               </div>
             </div>

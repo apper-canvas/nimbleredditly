@@ -5,7 +5,8 @@
     "description": "Latest news, discussions, and insights about technology, programming, and innovation.",
     "color": "#0079D3",
     "createdAt": "2024-01-15T10:30:00Z",
-    "postCount": 12
+    "postCount": 12,
+    "memberCount": 2847
   },
   {
     "Id": 2,
@@ -13,7 +14,8 @@
     "description": "Everything about video games, from reviews and tips to news and community discussions.",
     "color": "#8B5CF6",
     "createdAt": "2024-01-16T14:20:00Z",
-    "postCount": 8
+    "postCount": 8,
+    "memberCount": 1523
   },
   {
     "Id": 3,
@@ -21,7 +23,8 @@
     "description": "Fascinating discoveries, research breakthroughs, and scientific discussions for curious minds.",
     "color": "#10B981",
     "createdAt": "2024-01-17T09:15:00Z",
-    "postCount": 15
+    "postCount": 15,
+    "memberCount": 3942
   },
   {
     "Id": 4,
@@ -29,7 +32,8 @@
     "description": "Reviews, discussions, and recommendations about the latest movies and classic films.",
     "color": "#F59E0B",
     "createdAt": "2024-01-18T16:45:00Z",
-    "postCount": 6
+    "postCount": 6,
+    "memberCount": 892
   },
   {
     "Id": 5,
@@ -37,6 +41,7 @@
     "description": "Share your photos, get feedback, and discuss photography techniques with fellow enthusiasts.",
     "color": "#EF4444",
     "createdAt": "2024-01-19T11:30:00Z",
-    "postCount": 9
+    "postCount": 9,
+    "memberCount": 1667
   }
 ]

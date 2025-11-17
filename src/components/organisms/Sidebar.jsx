@@ -13,11 +13,18 @@ const Sidebar = ({ onCreatePost, isMobile = false, isOpen = false, onClose }) =>
     loadJoinedCommunities();
   }, []);
 
-  const loadJoinedCommunities = async () => {
+const loadJoinedCommunities = async () => {
     try {
       setCommunitiesLoading(true);
       const communities = await communityService.getUserMemberships();
-      setJoinedCommunities(communities);
+      // Enhance communities with member counts
+      const communitiesWithCounts = await Promise.all(
+        communities.map(async (community) => {
+          const fullCommunity = await communityService.getById(community.Id);
+          return { ...community, memberCount: fullCommunity.memberCount };
+        })
+      );
+      setJoinedCommunities(communitiesWithCounts);
     } catch (err) {
       console.error("Error loading joined communities:", err);
     } finally {
@@ -116,9 +123,11 @@ const navItems = [
 <div className="p-6 border-t border-gray-200">
         <Button 
           variant="primary" 
-          onClick={() => {
+onClick={() => {
             onCreatePost();
             if (isMobile) onClose();
+            // Refresh joined communities to show updated member counts
+            loadJoinedCommunities();
           }}
           className="w-full justify-center"
           size="lg"

@@ -1,7 +1,8 @@
 import communityData from "@/services/mockData/communities.json";
 import { toast } from "react-toastify";
+import membershipData from "@/services/mockData/memberships.json";
+import React from "react";
 
-import membershipData from '@/services/mockData/memberships.json';
 
 let communities = [...communityData];
 let memberships = [...membershipData];
@@ -9,18 +10,25 @@ let memberships = [...membershipData];
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const communityService = {
-  async getAll() {
+async getAll() {
     await delay(300);
-    return [...communities];
+    const communitiesWithCounts = communities.map(community => ({
+      ...community,
+      memberCount: this.getMemberCount(community.Id)
+    }));
+    return communitiesWithCounts;
   },
 
-  async getById(id) {
+async getById(id) {
     await delay(200);
     const community = communities.find(c => c.Id === parseInt(id));
     if (!community) {
       throw new Error("Community not found");
     }
-    return { ...community };
+    return { 
+      ...community, 
+      memberCount: this.getMemberCount(parseInt(id))
+    };
   },
 
   async create(communityData) {
@@ -139,10 +147,14 @@ export const communityService = {
     return joinedCommunities;
   },
 
-  async isUserMember(communityId, userId = 1) {
+async isUserMember(communityId, userId = 1) {
     await delay(100);
     return memberships.some(m => 
       m.userId === userId && m.communityId === parseInt(communityId)
     );
+  },
+
+  getMemberCount(communityId) {
+    return memberships.filter(m => m.communityId === parseInt(communityId)).length;
   }
 };
