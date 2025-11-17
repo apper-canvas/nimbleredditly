@@ -1,6 +1,7 @@
 import postData from "@/services/mockData/posts.json";
 import { communityService } from "@/services/api/communityService";
 import { toast } from "react-toastify";
+import React from "react";
 
 let posts = [...postData];
 
@@ -31,11 +32,11 @@ export const postService = {
   async create(postData) {
     await delay(400);
     
-    try {
+try {
       const community = await communityService.getById(postData.communityId);
       
       const newPost = {
-        Id: Math.max(...posts.map(p => p.Id)) + 1,
+        Id: Math.max(...posts.map(p => p.Id), 0) + 1,
         title: postData.title,
         content: postData.content,
         communityId: postData.communityId.toString(),

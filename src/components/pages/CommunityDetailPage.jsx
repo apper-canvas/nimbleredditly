@@ -89,9 +89,9 @@ const CommunityDetailPage = () => {
                   <ApperIcon name="MessageSquare" className="w-4 h-4 mr-1" />
                   {community.postCount} posts
                 </span>
-                <span className="flex items-center">
+<span className="flex items-center">
                   <ApperIcon name="Users" className="w-4 h-4 mr-1" />
-                  1.2k members
+                  {community.memberCount || '1.2k'} members
                 </span>
               </div>
             </div>
