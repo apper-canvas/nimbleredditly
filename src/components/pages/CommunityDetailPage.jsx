@@ -150,22 +150,27 @@ const handleCreatePost = () => {
               <ApperIcon name="Plus" className="w-4 h-4 mr-2" />
               Create Post
             </Button>
-          </div>
-        </div>
 </div>
-        
-        {/* Sorting and Create Post Controls */}
-        <div className="flex items-center justify-between mb-6">
-          <SortingTabs
-            activeSort={sortBy}
-            onSortChange={setSortBy}
-          />
-          <Button onClick={() => setIsCreatePostOpen(true)} className="flex items-center gap-2">
-            <ApperIcon name="Plus" size={16} />
-            New Post
-          </Button>
         </div>
       </motion.div>
+        
+      {/* Sorting and Create Post Controls */}
+      <motion.div 
+        className="flex items-center justify-between mb-6"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+      >
+        <SortingTabs
+          activeSort={sortBy}
+          onSortChange={setSortBy}
+        />
+        <Button onClick={() => setIsCreatePostOpen(true)} className="flex items-center gap-2">
+          <ApperIcon name="Plus" size={16} />
+          New Post
+        </Button>
+      </motion.div>
+
       {/* Back Navigation */}
       <motion.button
         className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
