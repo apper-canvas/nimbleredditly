@@ -107,11 +107,13 @@ const handleCommentSubmit = async (e) => {
     }
   };
 
-  const handleReplyClick = (commentId) => {
-    setReplyingTo(replyingTo === commentId ? null : commentId);
+const handleReplyClick = (commentId) => {
+    // Initialize reply text first to prevent timing issues
     if (replyingTo !== commentId) {
       setReplyTexts(prev => ({ ...prev, [commentId]: prev[commentId] || "" }));
     }
+    // Then toggle the reply state
+    setReplyingTo(replyingTo === commentId ? null : commentId);
   };
 
   const handleReplyTextChange = (commentId, text) => {
