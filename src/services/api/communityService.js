@@ -1,7 +1,10 @@
 import communityData from "@/services/mockData/communities.json";
 import { toast } from "react-toastify";
 
+import membershipData from '@/services/mockData/memberships.json';
+
 let communities = [...communityData];
+let memberships = [...membershipData];
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -75,5 +78,71 @@ export const communityService = {
     if (index !== -1) {
       communities[index].postCount += 1;
     }
+  },
+
+  async joinCommunity(communityId) {
+    await delay(200);
+    const userId = 1; // Mock user ID
+    
+    const existingMembership = memberships.find(m => 
+      m.userId === userId && m.communityId === parseInt(communityId)
+    );
+    
+    if (existingMembership) {
+      throw new Error("Already a member of this community");
+    }
+
+    const newMembership = {
+      Id: Math.max(...memberships.map(m => m.Id)) + 1,
+      userId: userId,
+      communityId: parseInt(communityId),
+      joinedAt: new Date().toISOString()
+    };
+    
+    memberships.push(newMembership);
+    toast.success("Successfully joined community!");
+    return true;
+  },
+
+  async leaveCommunity(communityId) {
+    await delay(200);
+    const userId = 1; // Mock user ID
+    
+    const membershipIndex = memberships.findIndex(m => 
+      m.userId === userId && m.communityId === parseInt(communityId)
+    );
+    
+    if (membershipIndex === -1) {
+      throw new Error("Not a member of this community");
+    }
+
+    memberships.splice(membershipIndex, 1);
+    toast.success("Successfully left community!");
+    return true;
+  },
+
+  async getUserMemberships(userId = 1) {
+    await delay(150);
+    const userMemberships = memberships.filter(m => m.userId === userId);
+    const joinedCommunities = [];
+    
+    for (const membership of userMemberships) {
+      const community = communities.find(c => c.Id === membership.communityId);
+      if (community) {
+        joinedCommunities.push({
+          ...community,
+          joinedAt: membership.joinedAt
+        });
+      }
+    }
+    
+    return joinedCommunities;
+  },
+
+  async isUserMember(communityId, userId = 1) {
+    await delay(100);
+    return memberships.some(m => 
+      m.userId === userId && m.communityId === parseInt(communityId)
+    );
   }
 };

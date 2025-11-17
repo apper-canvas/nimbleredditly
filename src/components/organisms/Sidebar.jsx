@@ -1,17 +1,36 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { NavLink } from "react-router-dom";
 import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
+import { communityService } from "@/services/api/communityService";
 import { cn } from "@/utils/cn";
-
 const Sidebar = ({ onCreatePost, isMobile = false, isOpen = false, onClose }) => {
-  const navItems = [
+  const [joinedCommunities, setJoinedCommunities] = useState([]);
+  const [communitiesLoading, setCommunitiesLoading] = useState(true);
+
+  useEffect(() => {
+    loadJoinedCommunities();
+  }, []);
+
+  const loadJoinedCommunities = async () => {
+    try {
+      setCommunitiesLoading(true);
+      const communities = await communityService.getUserMemberships();
+      setJoinedCommunities(communities);
+    } catch (err) {
+      console.error("Error loading joined communities:", err);
+    } finally {
+      setCommunitiesLoading(false);
+    }
+  };
+const navItems = [
     { path: "/", label: "Home", icon: "Home" },
     { path: "/communities", label: "Communities", icon: "Grid3X3" }
   ];
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+<div className="flex flex-col h-full">
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center shadow-md">
@@ -21,7 +40,7 @@ const Sidebar = ({ onCreatePost, isMobile = false, isOpen = false, onClose }) =>
         </div>
       </div>
 
-      <nav className="flex-1 p-6 space-y-2">
+      <nav className="flex-1 p-6 space-y-2 overflow-y-auto custom-scrollbar">
         {navItems.map((item) => (
           <NavLink
             key={item.path}
@@ -51,9 +70,50 @@ const Sidebar = ({ onCreatePost, isMobile = false, isOpen = false, onClose }) =>
             )}
           </NavLink>
         ))}
+
+        {/* My Communities Section */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              My Communities
+            </h3>
+            {communitiesLoading && (
+              <ApperIcon name="Loader2" className="w-4 h-4 animate-spin text-gray-400" />
+            )}
+          </div>
+          
+          {!communitiesLoading && joinedCommunities.length === 0 && (
+            <p className="text-sm text-gray-500 italic px-4 py-2">
+              No communities joined yet
+            </p>
+          )}
+
+          {joinedCommunities.map((community) => (
+            <NavLink
+              key={community.Id}
+              to={`/communities/${community.Id}`}
+              onClick={isMobile ? onClose : undefined}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200",
+                  "hover:bg-gray-100 hover:text-gray-900",
+                  isActive
+                    ? "bg-primary-50 text-primary-700 font-medium"
+                    : "text-gray-600"
+                )
+              }
+            >
+              <div 
+                className="w-4 h-4 rounded-full flex-shrink-0"
+                style={{ backgroundColor: community.color }}
+              />
+              <span className="text-sm truncate">{community.name}</span>
+            </NavLink>
+          ))}
+        </div>
       </nav>
 
-      <div className="p-6 border-t border-gray-200">
+<div className="p-6 border-t border-gray-200">
         <Button 
           variant="primary" 
           onClick={() => {

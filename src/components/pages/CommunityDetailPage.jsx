@@ -1,30 +1,32 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { communityService } from "@/services/api/communityService";
-import PostFeed from "@/components/organisms/PostFeed";
-import CreatePostModal from "@/components/organisms/CreatePostModal";
+import { formatDistanceToNow } from "date-fns";
+import ApperIcon from "@/components/ApperIcon";
 import SortingTabs from "@/components/molecules/SortingTabs";
 import Loading from "@/components/ui/Loading";
 import ErrorView from "@/components/ui/ErrorView";
-import ApperIcon from "@/components/ApperIcon";
+import PostFeed from "@/components/organisms/PostFeed";
+import CreatePostModal from "@/components/organisms/CreatePostModal";
 import Button from "@/components/atoms/Button";
-import { formatDistanceToNow } from "date-fns";
 
 const CommunityDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [community, setCommunity] = useState(null);
+const [community, setCommunity] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-const [sortBy, setSortBy] = useState('hot');
+  const [sortBy, setSortBy] = useState('hot');
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
-
+  const [isMember, setIsMember] = useState(false);
+  const [membershipLoading, setMembershipLoading] = useState(false);
   useEffect(() => {
-    loadCommunity();
+loadCommunity();
+    checkMembership();
   }, [id]);
 
-  const loadCommunity = async () => {
+const loadCommunity = async () => {
     try {
       setLoading(true);
       setError("");
@@ -37,7 +39,33 @@ const [sortBy, setSortBy] = useState('hot');
     }
   };
 
-  const handleCreatePost = () => {
+  const checkMembership = async () => {
+    try {
+      const membershipStatus = await communityService.isUserMember(id);
+      setIsMember(membershipStatus);
+    } catch (err) {
+      console.error("Error checking membership:", err);
+    }
+  };
+
+  const handleJoinLeave = async () => {
+    try {
+      setMembershipLoading(true);
+      if (isMember) {
+        await communityService.leaveCommunity(id);
+        setIsMember(false);
+      } else {
+        await communityService.joinCommunity(id);
+        setIsMember(true);
+      }
+    } catch (err) {
+      console.error("Error updating membership:", err);
+    } finally {
+      setMembershipLoading(false);
+    }
+  };
+
+const handleCreatePost = () => {
     setIsCreatePostOpen(true);
   };
 
@@ -99,16 +127,24 @@ const [sortBy, setSortBy] = useState('hot');
             </div>
           </div>
           
-          <div className="flex items-center space-x-3">
+<div className="flex items-center space-x-3">
+            <Button
+              variant={isMember ? "secondary" : "primary"}
+              size="md"
+              onClick={handleJoinLeave}
+              disabled={membershipLoading}
+            >
+              <ApperIcon 
+                name={isMember ? "UserMinus" : "UserPlus"} 
+                className="w-4 h-4 mr-2" 
+              />
+              {membershipLoading 
+                ? (isMember ? "Leaving..." : "Joining...") 
+                : (isMember ? "Leave Community" : "Join Community")
+              }
+</Button>
             <Button
               variant="secondary"
-              size="md"
-            >
-              <ApperIcon name="UserPlus" className="w-4 h-4 mr-2" />
-              Join Community
-            </Button>
-            <Button
-              variant="primary"
               onClick={handleCreatePost}
             >
               <ApperIcon name="Plus" className="w-4 h-4 mr-2" />
@@ -116,7 +152,10 @@ const [sortBy, setSortBy] = useState('hot');
             </Button>
           </div>
         </div>
-<div className="flex items-center justify-between mb-6">
+</div>
+        
+        {/* Sorting and Create Post Controls */}
+        <div className="flex items-center justify-between mb-6">
           <SortingTabs
             activeSort={sortBy}
             onSortChange={setSortBy}
@@ -127,7 +166,6 @@ const [sortBy, setSortBy] = useState('hot');
           </Button>
         </div>
       </motion.div>
-
       {/* Back Navigation */}
       <motion.button
         className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
