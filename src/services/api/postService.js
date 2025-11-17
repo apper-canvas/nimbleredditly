@@ -1,23 +1,87 @@
 import postData from "@/services/mockData/posts.json";
 import { communityService } from "@/services/api/communityService";
 import { toast } from "react-toastify";
-import React from "react";
 
 let posts = [...postData];
+
+// Mock comments data
+let comments = [
+  {
+    Id: 1,
+    postId: 1,
+    content: "This is really interesting! Thanks for sharing.",
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    voteCount: 3,
+    parentId: null
+  },
+  {
+    Id: 2,
+    postId: 1,
+    content: "I completely agree with your analysis. Great points made throughout the post.",
+    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(), // 45 minutes ago
+    voteCount: 1,
+    parentId: null
+  },
+  {
+    Id: 3,
+    postId: 2,
+    content: "Could you elaborate more on this topic? I'd love to learn more.",
+    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+    voteCount: 0,
+    parentId: null
+  },
+  {
+    Id: 4,
+    postId: 1,
+    content: "I had a similar experience! Really appreciate you sharing this perspective.",
+    createdAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(), // 20 minutes ago
+    voteCount: 2,
+    parentId: 1
+  },
+  {
+    Id: 5,
+    postId: 1,
+    content: "Could you provide more details about the methodology you mentioned?",
+    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
+    voteCount: 0,
+    parentId: 2
+  },
+  {
+    Id: 6,
+    postId: 1,
+    content: "Thanks for asking! I'd be happy to elaborate on that specific point.",
+    createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 minutes ago
+    voteCount: 1,
+    parentId: 5
+  }
+];
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const postService = {
-  async getAll() {
+async getAll(sortBy = 'hot') {
     await delay(250);
-return [...posts].sort((a, b) => {
-      // Sort by vote count first (highest first)
-      if (b.voteCount !== a.voteCount) {
-        return b.voteCount - a.voteCount;
-      }
-      // If vote counts are equal, sort by creation date (newest first)
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
+    const sortedPosts = [...posts];
+    
+    switch (sortBy) {
+      case 'new':
+        return sortedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      case 'top':
+        return sortedPosts.sort((a, b) => b.voteCount - a.voteCount);
+      case 'hot':
+      default:
+        return sortedPosts.sort((a, b) => {
+          // Hot algorithm: vote count weighted by recency
+          const aHotScore = a.voteCount / (Math.log(Math.max(1, (Date.now() - new Date(a.createdAt)) / (1000 * 60 * 60))) + 1);
+          const bHotScore = b.voteCount / (Math.log(Math.max(1, (Date.now() - new Date(b.createdAt)) / (1000 * 60 * 60))) + 1);
+          
+          if (Math.abs(bHotScore - aHotScore) > 0.1) {
+            return bHotScore - aHotScore;
+          }
+          // Fallback to vote count for similar hot scores
+          return b.voteCount - a.voteCount;
+        });
+    }
   },
 
   async getById(id) {
@@ -29,18 +93,29 @@ return [...posts].sort((a, b) => {
     return { ...post };
   },
 
-  async getByCommunityId(communityId) {
+async getByCommunityId(communityId, sortBy = 'hot') {
     await delay(300);
-return [...posts]
-      .filter(p => p.communityId === communityId.toString())
-      .sort((a, b) => {
-        // Sort by vote count first (highest first)
-        if (b.voteCount !== a.voteCount) {
+    const communityPosts = [...posts].filter(p => p.communityId === communityId.toString());
+    
+    switch (sortBy) {
+      case 'new':
+        return communityPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      case 'top':
+        return communityPosts.sort((a, b) => b.voteCount - a.voteCount);
+      case 'hot':
+      default:
+        return communityPosts.sort((a, b) => {
+          // Hot algorithm: vote count weighted by recency
+          const aHotScore = a.voteCount / (Math.log(Math.max(1, (Date.now() - new Date(a.createdAt)) / (1000 * 60 * 60))) + 1);
+          const bHotScore = b.voteCount / (Math.log(Math.max(1, (Date.now() - new Date(b.createdAt)) / (1000 * 60 * 60))) + 1);
+          
+          if (Math.abs(bHotScore - aHotScore) > 0.1) {
+            return bHotScore - aHotScore;
+          }
+          // Fallback to vote count for similar hot scores
           return b.voteCount - a.voteCount;
-        }
-        // If vote counts are equal, sort by creation date (newest first)
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+        });
+    }
   },
 
   async create(postData) {
@@ -167,55 +242,3 @@ async createComment(postId, content) {
     return { ...comment };
   }
 };
-
-// Mock comments data
-let comments = [
-  {
-    Id: 1,
-    postId: 1,
-    content: "This is really interesting! Thanks for sharing.",
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    voteCount: 3,
-    parentId: null
-  },
-  {
-    Id: 2,
-    postId: 1,
-    content: "I completely agree with your analysis. Great points made throughout the post.",
-    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(), // 45 minutes ago
-    voteCount: 1,
-    parentId: null
-  },
-  {
-    Id: 3,
-    postId: 2,
-    content: "Could you elaborate more on this topic? I'd love to learn more.",
-    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-    voteCount: 0,
-    parentId: null
-  },
-  {
-    Id: 4,
-    postId: 1,
-    content: "I had a similar experience! Really appreciate you sharing this perspective.",
-    createdAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(), // 20 minutes ago
-    voteCount: 2,
-    parentId: 1
-  },
-  {
-    Id: 5,
-    postId: 1,
-    content: "Could you provide more details about the methodology you mentioned?",
-    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
-    voteCount: 0,
-    parentId: 2
-  },
-  {
-    Id: 6,
-    postId: 1,
-    content: "Thanks for asking! I'd be happy to elaborate on that specific point.",
-    createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 minutes ago
-    voteCount: 1,
-    parentId: 5
-  }
-];

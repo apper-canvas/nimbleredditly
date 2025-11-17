@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { communityService } from "@/services/api/communityService";
 import PostFeed from "@/components/organisms/PostFeed";
 import CreatePostModal from "@/components/organisms/CreatePostModal";
+import SortingTabs from "@/components/molecules/SortingTabs";
 import Loading from "@/components/ui/Loading";
 import ErrorView from "@/components/ui/ErrorView";
 import ApperIcon from "@/components/ApperIcon";
@@ -16,6 +17,7 @@ const CommunityDetailPage = () => {
   const [community, setCommunity] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+const [sortBy, setSortBy] = useState('hot');
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
 
   useEffect(() => {
@@ -114,6 +116,16 @@ const CommunityDetailPage = () => {
             </Button>
           </div>
         </div>
+<div className="flex items-center justify-between mb-6">
+          <SortingTabs
+            activeSort={sortBy}
+            onSortChange={setSortBy}
+          />
+          <Button onClick={() => setIsCreatePostOpen(true)} className="flex items-center gap-2">
+            <ApperIcon name="Plus" size={16} />
+            New Post
+          </Button>
+        </div>
       </motion.div>
 
       {/* Back Navigation */}
@@ -135,7 +147,7 @@ const CommunityDetailPage = () => {
         transition={{ duration: 0.3, delay: 0.3 }}
       >
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Posts</h2>
-        <PostFeed communityId={id} onCreatePost={handleCreatePost} />
+<PostFeed communityId={id} sortBy={sortBy} onCreatePost={handleCreatePost} />
       </motion.div>
 
       <CreatePostModal 

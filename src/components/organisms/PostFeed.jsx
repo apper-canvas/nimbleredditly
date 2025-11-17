@@ -7,14 +7,14 @@ import Loading from "@/components/ui/Loading";
 import Empty from "@/components/ui/Empty";
 import ErrorView from "@/components/ui/ErrorView";
 
-const PostFeed = ({ communityId = null, onCreatePost }) => {
+const PostFeed = ({ communityId = null, sortBy = 'hot', onCreatePost }) => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  useEffect(() => {
+useEffect(() => {
     loadPosts();
-  }, [communityId]);
+  }, [communityId, sortBy]);
 
   const loadPosts = async () => {
     try {
@@ -22,10 +22,10 @@ const PostFeed = ({ communityId = null, onCreatePost }) => {
       setError("");
       
       let data;
-      if (communityId) {
-        data = await postService.getByCommunityId(communityId);
+if (communityId) {
+        data = await postService.getByCommunityId(communityId, sortBy);
       } else {
-        data = await postService.getAll();
+        data = await postService.getAll(sortBy);
       }
       
       setPosts(data);
@@ -60,7 +60,7 @@ const PostFeed = ({ communityId = null, onCreatePost }) => {
   }
 
   return (
-    <motion.div 
+<motion.div
       className="space-y-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
