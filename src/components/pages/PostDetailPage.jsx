@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "react-toastify";
 import { postService } from "@/services/api/postService";
 import ApperIcon from "@/components/ApperIcon";
-import Button from "@/components/atoms/Button";
 import CommunityBadge from "@/components/molecules/CommunityBadge";
 import Loading from "@/components/ui/Loading";
 import ErrorView from "@/components/ui/ErrorView";
+import Button from "@/components/atoms/Button";
 const PostDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -83,9 +83,33 @@ const handleCommunityClick = () => {
     } finally {
       setSubmitting(false);
     }
-  };
+};
 
-if (loading) {
+  const handleCommentVote = async (commentId, voteType) => {
+    try {
+      // Optimistic update
+      const increment = voteType === "up" ? 1 : -1;
+      setComments(prev => prev.map(comment => 
+        comment.Id === commentId 
+          ? { ...comment, voteCount: (comment.voteCount || 0) + increment }
+          : comment
+      ));
+      
+      await postService.voteComment(commentId, voteType);
+      toast.success(`Comment ${voteType === "up" ? "upvoted" : "downvoted"}!`);
+    } catch (error) {
+      // Rollback on error
+      const rollback = voteType === "up" ? -1 : 1;
+      setComments(prev => prev.map(comment => 
+        comment.Id === commentId 
+          ? { ...comment, voteCount: (comment.voteCount || 0) + rollback }
+          : comment
+      ));
+      toast.error("Failed to vote. Please try again.");
+    }
+};
+
+  if (loading) {
     return <Loading />;
   }
 
@@ -256,10 +280,29 @@ if (loading) {
                 transition={{ duration: 0.2 }}
                 className="border-l-2 border-gray-200 pl-4 py-3"
               >
-                <p className="text-gray-800 mb-2">{comment.content}</p>
-                <div className="flex items-center text-sm text-gray-500">
-                  <ApperIcon name="Clock" size={14} className="mr-1" />
-                  {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+<p className="text-gray-800 mb-2">{comment.content}</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-sm text-gray-500">
+                    <ApperIcon name="Clock" size={14} className="mr-1" />
+                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => handleCommentVote(comment.Id, "up")}
+                      className="p-1 rounded-full hover:bg-green-100 text-gray-400 hover:text-green-600 transition-colors"
+                    >
+                      <ApperIcon name="ChevronUp" size={16} />
+                    </button>
+                    <span className="text-sm font-medium text-gray-600 min-w-[20px] text-center">
+                      {comment.voteCount || 0}
+                    </span>
+                    <button
+                      onClick={() => handleCommentVote(comment.Id, "down")}
+                      className="p-1 rounded-full hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors"
+                    >
+                      <ApperIcon name="ChevronDown" size={16} />
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}

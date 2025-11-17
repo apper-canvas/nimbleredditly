@@ -117,6 +117,21 @@ return { ...posts[index] };
     
     comments.push(newComment);
     return { ...newComment };
+},
+
+  // Comment voting functionality
+  async voteComment(commentId, voteType) {
+    await delay(200);
+    
+    const comment = comments.find(c => c.Id === commentId);
+    if (!comment) {
+      throw new Error("Comment not found");
+    }
+
+    const increment = voteType === "up" ? 1 : -1;
+    comment.voteCount = (comment.voteCount || 0) + increment;
+    
+    return { ...comment };
   }
 };
 
@@ -126,18 +141,21 @@ let comments = [
     Id: 1,
     postId: 1,
     content: "This is really interesting! Thanks for sharing.",
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() // 2 hours ago
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    voteCount: 3
   },
   {
     Id: 2,
     postId: 1,
     content: "I completely agree with your analysis. Great points made throughout the post.",
-    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString() // 45 minutes ago
+    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(), // 45 minutes ago
+    voteCount: 1
   },
   {
     Id: 3,
     postId: 2,
     content: "Could you elaborate more on this topic? I'd love to learn more.",
-    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() // 30 minutes ago
+    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+    voteCount: 0
   }
 ];
