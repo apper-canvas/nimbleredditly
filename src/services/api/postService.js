@@ -100,24 +100,42 @@ return { ...posts[index] };
   },
 
   // Comments functionality
-  async getCommentsByPostId(postId) {
+async getCommentsByPostId(postId) {
     await delay(200);
     const postComments = comments.filter(c => c.postId === parseInt(postId));
     return [...postComments].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   },
 
-  async createComment(postId, content) {
+async createComment(postId, content) {
     await delay(300);
     
     const newComment = {
       Id: Math.max(...comments.map(c => c.Id), 0) + 1,
       postId: parseInt(postId),
       content: content,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      parentId: null,
+      voteCount: 0
     };
     
     comments.push(newComment);
     return { ...newComment };
+  },
+
+  async createReply(postId, parentId, content) {
+    await delay(300);
+    
+    const newReply = {
+      Id: Math.max(...comments.map(c => c.Id), 0) + 1,
+      postId: parseInt(postId),
+      parentId: parseInt(parentId),
+      content: content,
+      createdAt: new Date().toISOString(),
+      voteCount: 0
+    };
+    
+    comments.push(newReply);
+    return { ...newReply };
 },
 
   // Comment voting functionality
@@ -143,20 +161,47 @@ let comments = [
     postId: 1,
     content: "This is really interesting! Thanks for sharing.",
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    voteCount: 3
+    voteCount: 3,
+    parentId: null
   },
   {
     Id: 2,
     postId: 1,
     content: "I completely agree with your analysis. Great points made throughout the post.",
     createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(), // 45 minutes ago
-    voteCount: 1
+    voteCount: 1,
+    parentId: null
   },
   {
     Id: 3,
     postId: 2,
     content: "Could you elaborate more on this topic? I'd love to learn more.",
     createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-    voteCount: 0
+    voteCount: 0,
+    parentId: null
+  },
+  {
+    Id: 4,
+    postId: 1,
+    content: "I had a similar experience! Really appreciate you sharing this perspective.",
+    createdAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(), // 20 minutes ago
+    voteCount: 2,
+    parentId: 1
+  },
+  {
+    Id: 5,
+    postId: 1,
+    content: "Could you provide more details about the methodology you mentioned?",
+    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
+    voteCount: 0,
+    parentId: 2
+  },
+  {
+    Id: 6,
+    postId: 1,
+    content: "Thanks for asking! I'd be happy to elaborate on that specific point.",
+    createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 minutes ago
+    voteCount: 1,
+    parentId: 5
   }
 ];

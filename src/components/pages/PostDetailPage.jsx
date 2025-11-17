@@ -19,6 +19,9 @@ const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyTexts, setReplyTexts] = useState({});
+  const [submittingReply, setSubmittingReply] = useState(false);
 
 useEffect(() => {
     loadPost();
@@ -68,7 +71,7 @@ const handleCommunityClick = () => {
     navigate(`/community/${post.communityId}`);
   };
 
-  const handleCommentSubmit = async (e) => {
+const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
@@ -83,9 +86,39 @@ const handleCommunityClick = () => {
     } finally {
       setSubmitting(false);
     }
-};
+  };
 
-  const handleCommentVote = async (commentId, voteType) => {
+  const handleReplySubmit = async (e, parentId) => {
+    e.preventDefault();
+    const replyText = replyTexts[parentId];
+    if (!replyText?.trim()) return;
+
+    try {
+      setSubmittingReply(true);
+      const reply = await postService.createReply(id, parentId, replyText.trim());
+      setComments(prev => [...prev, reply]);
+      setReplyTexts(prev => ({ ...prev, [parentId]: "" }));
+      setReplyingTo(null);
+      toast.success("Reply added successfully!");
+    } catch (err) {
+      toast.error("Failed to add reply. Please try again.");
+    } finally {
+      setSubmittingReply(false);
+    }
+  };
+
+  const handleReplyClick = (commentId) => {
+    setReplyingTo(replyingTo === commentId ? null : commentId);
+    if (replyingTo !== commentId) {
+      setReplyTexts(prev => ({ ...prev, [commentId]: prev[commentId] || "" }));
+    }
+  };
+
+  const handleReplyTextChange = (commentId, text) => {
+    setReplyTexts(prev => ({ ...prev, [commentId]: text }));
+  };
+
+const handleCommentVote = async (commentId, voteType) => {
     try {
       // Optimistic update
       const increment = voteType === "up" ? 1 : -1;
@@ -107,7 +140,135 @@ const handleCommunityClick = () => {
       ));
       toast.error("Failed to vote. Please try again.");
     }
-};
+  };
+
+  // Helper function to build nested comment structure
+  const buildCommentTree = (comments) => {
+    const commentMap = {};
+    const rootComments = [];
+
+    // Create a map of all comments
+    comments.forEach(comment => {
+      commentMap[comment.Id] = { ...comment, replies: [] };
+    });
+
+    // Build the tree structure
+    comments.forEach(comment => {
+      if (comment.parentId && commentMap[comment.parentId]) {
+        commentMap[comment.parentId].replies.push(commentMap[comment.Id]);
+      } else {
+        rootComments.push(commentMap[comment.Id]);
+      }
+    });
+
+    return rootComments;
+  };
+
+  // Recursive comment component
+  const CommentItem = ({ comment, depth = 0 }) => {
+    const isReplying = replyingTo === comment.Id;
+    const replyText = replyTexts[comment.Id] || "";
+    const maxDepth = 6;
+    const indentClass = depth > 0 ? `ml-${Math.min(depth * 6, maxDepth * 6)} pl-4 border-l-2 border-gray-200` : "border-l-2 border-gray-200 pl-4";
+
+    return (
+      <div className={`py-3 ${depth > 0 ? indentClass : "border-l-2 border-gray-200 pl-4"}`}>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <p className="text-gray-800 mb-2">{comment.content}</p>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center text-sm text-gray-500">
+              <ApperIcon name="Clock" size={14} className="mr-1" />
+              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+            </div>
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => handleCommentVote(comment.Id, "up")}
+                className="p-1 rounded-full hover:bg-green-100 text-gray-400 hover:text-green-600 transition-colors"
+              >
+                <ApperIcon name="ChevronUp" size={16} />
+              </button>
+              <span className="text-sm font-medium text-gray-600 min-w-[20px] text-center">
+                {comment.voteCount || 0}
+              </span>
+              <button
+                onClick={() => handleCommentVote(comment.Id, "down")}
+                className="p-1 rounded-full hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors"
+              >
+                <ApperIcon name="ChevronDown" size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Reply Button */}
+          <div className="flex items-center space-x-2 mb-3">
+            <button
+              onClick={() => handleReplyClick(comment.Id)}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+            >
+              <ApperIcon name="MessageCircle" size={14} className="inline mr-1" />
+              {isReplying ? "Cancel" : "Reply"}
+            </button>
+          </div>
+
+          {/* Reply Form */}
+          {isReplying && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-4"
+            >
+              <form onSubmit={(e) => handleReplySubmit(e, comment.Id)} className="space-y-3">
+                <textarea
+                  value={replyText}
+                  onChange={(e) => handleReplyTextChange(comment.Id, e.target.value)}
+                  placeholder="Write your reply..."
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows="3"
+                />
+                <div className="flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => handleReplyClick(comment.Id)}
+                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <Button
+                    type="submit"
+                    disabled={!replyText.trim() || submittingReply}
+                    className="px-4 py-2 text-sm"
+                  >
+                    {submittingReply ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Replying...
+                      </div>
+                    ) : (
+                      "Reply"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          )}
+
+          {/* Nested Replies */}
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="mt-4 space-y-4">
+              {comment.replies.map((reply) => (
+                <CommentItem key={reply.Id} comment={reply} depth={depth + 1} />
+              ))}
+            </div>
+          )}
+        </motion.div>
+      </div>
+    );
+  };
 
   if (loading) {
     return <Loading />;
@@ -269,42 +430,11 @@ const handleCommunityClick = () => {
           </div>
         </form>
 
-        {/* Comments List */}
+{/* Comments List */}
         {comments.length > 0 ? (
           <div className="space-y-4">
-            {comments.map((comment) => (
-              <motion.div
-                key={comment.Id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="border-l-2 border-gray-200 pl-4 py-3"
-              >
-<p className="text-gray-800 mb-2">{comment.content}</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <ApperIcon name="Clock" size={14} className="mr-1" />
-                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <button
-                      onClick={() => handleCommentVote(comment.Id, "up")}
-                      className="p-1 rounded-full hover:bg-green-100 text-gray-400 hover:text-green-600 transition-colors"
-                    >
-                      <ApperIcon name="ChevronUp" size={16} />
-                    </button>
-                    <span className="text-sm font-medium text-gray-600 min-w-[20px] text-center">
-                      {comment.voteCount || 0}
-                    </span>
-                    <button
-                      onClick={() => handleCommentVote(comment.Id, "down")}
-                      className="p-1 rounded-full hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors"
-                    >
-                      <ApperIcon name="ChevronDown" size={16} />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
+{buildCommentTree(comments).map((comment) => (
+              <CommentItem key={comment.Id} comment={comment} />
             ))}
           </div>
         ) : (
