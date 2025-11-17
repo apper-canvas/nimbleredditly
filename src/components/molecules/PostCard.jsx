@@ -9,7 +9,7 @@ import ApperIcon from "@/components/ApperIcon";
 import CommunityBadge from "@/components/molecules/CommunityBadge";
 
 
-const PostCard = ({ post, className, ...props }) => {
+const PostCard = ({ post, className, onCommentClick, ...props }) => {
   const navigate = useNavigate();
   const [currentVoteCount, setCurrentVoteCount] = useState(post.voteCount || 0);
 
@@ -117,14 +117,19 @@ const handleClick = () => {
                 className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <div className="flex items-center space-x-4">
                     <motion.button
-                        className="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors"
+className="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
                         whileHover={{
                             scale: 1.05
                         }}
                         whileTap={{
                             scale: 0.95
                         }}
-                        onClick={e => e.stopPropagation()}>
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (onCommentClick) {
+                                onCommentClick(post.Id);
+                            }
+                        }}>
                         <ApperIcon name="MessageSquare" className="w-4 h-4" />
                         <span className="text-sm font-medium">Comments</span>
                     </motion.button>

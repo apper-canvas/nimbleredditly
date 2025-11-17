@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { postService } from "@/services/api/postService";
 import PostCard from "@/components/molecules/PostCard";
 import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
 import Empty from "@/components/ui/Empty";
+import ErrorView from "@/components/ui/ErrorView";
 
 const PostFeed = ({ communityId = null, onCreatePost }) => {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   useEffect(() => {
     loadPosts();
   }, [communityId]);
@@ -65,14 +66,17 @@ const PostFeed = ({ communityId = null, onCreatePost }) => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {posts.map((post, index) => (
+{posts.map((post, index) => (
         <motion.div
           key={post.Id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: index * 0.1 }}
         >
-          <PostCard post={post} />
+          <PostCard 
+            post={post} 
+            onCommentClick={(postId) => navigate(`/posts/${postId}`)}
+          />
         </motion.div>
       ))}
     </motion.div>
